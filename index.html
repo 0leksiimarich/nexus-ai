@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NEXUS AI">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>NEXUS AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #ffffff0f;
+    --border2: #ffffff1a;
+    --text: #f0f0f8;
+    --text2: #8888aa;
+    --text3: #5555777;
+    --accent: #7c6aff;
+    --accent2: #b06aff;
+    --bubble-user: #7c6aff;
+    --bubble-ai: #1e1e2e;
+    --danger: #ff4466;
+    --safe: #44ffaa;
+    --radius: 18px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    position: absolute; inset: 0;
+    display: none; flex-direction: column;
+    transition: opacity 0.25s ease;
+  }
+  .screen.active { display: flex; }
+
+  /* ── SPLASH ── */
+  #splash {
+    align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at 50% 40%, #1a1030 0%, var(--bg) 70%);
+  }
+  .splash-logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 52px; font-weight: 800;
+    letter-spacing: -2px;
+    background: linear-gradient(135deg, #fff 30%, var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    animation: fadeUp 0.8s ease both;
+  }
+  .splash-sub {
+    color: var(--text2); font-size: 13px; letter-spacing: 4px;
+    text-transform: uppercase; margin-top: 8px;
+    animation: fadeUp 0.8s 0.15s ease both;
+  }
+  .splash-loader {
+    margin-top: 60px; width: 48px; height: 2px;
+    background: var(--border2); border-radius: 2px; overflow: hidden;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+  .splash-loader::after {
+    content: ''; display: block; height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    animation: loaderBar 1.4s ease-in-out forwards;
+  }
+
+  @keyframes loaderBar { from { width: 0 } to { width: 100% } }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px) }
+    to   { opacity: 1; transform: none }
+  }
+  @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(24px) }
+    to   { opacity: 1; transform: none }
+  }
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.97) }
+    to   { opacity: 1; transform: none }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4 } 50% { opacity: 1 }
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg) }
+  }
+
+  /* ── HOME ── */
+  #home { background: var(--bg); }
+
+  .home-header {
+    padding: 56px 24px 20px;
+    background: linear-gradient(180deg, #12121a 0%, transparent 100%);
+    flex-shrink: 0;
+  }
+  .home-greeting {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px; font-weight: 700;
+    line-height: 1.2;
+  }
+  .home-greeting span { color: var(--accent2); }
+  .home-sub { color: var(--text2); font-size: 13px; margin-top: 4px; }
+
+  .home-scroll { flex: 1; overflow-y: auto; padding: 8px 24px 32px; }
+  .home-scroll::-webkit-scrollbar { display: none; }
+
+  .section-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--text2);
+    margin: 24px 0 12px;
+  }
+
+  /* Persona cards */
+  .personas-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .persona-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: transform 0.18s, border-color 0.18s, background 0.18s;
+    position: relative; overflow: hidden;
+  }
+  .persona-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, var(--p-color, var(--accent))22 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .persona-card:active { transform: scale(0.96); }
+  .persona-icon {
+    font-size: 30px; line-height: 1;
+    margin-bottom: 10px;
+  }
+  .persona-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 700;
+    color: var(--text);
+  }
+  .persona-desc {
+    font-size: 11px; color: var(--text2);
+    margin-top: 4px; line-height: 1.4;
+  }
+  .persona-tag {
+    display: inline-block; margin-top: 8px;
+    padding: 2px 8px; border-radius: 20px;
+    font-size: 10px; font-weight: 600;
+    background: var(--p-color, var(--accent))22;
+    color: var(--p-color, var(--accent));
+    letter-spacing: 0.5px;
+  }
+
+  /* History */
+  .history-list { display: flex; flex-direction: column; gap: 8px; }
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 12px;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .history-item:active { background: var(--surface2); }
+  .history-icon { font-size: 22px; flex-shrink: 0; }
+  .history-info { flex: 1; min-width: 0; }
+  .history-name {
+    font-size: 13px; font-weight: 600;
+    color: var(--text); white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .history-preview {
+    font-size: 11px; color: var(--text2);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-top: 2px;
+  }
+  .history-time {
+    font-size: 10px; color: var(--text3);
+    flex-shrink: 0;
+  }
+  .history-del {
+    background: none; border: none;
+    color: var(--text3); font-size: 18px;
+    padding: 6px; cursor: pointer;
+    flex-shrink: 0; line-height: 1;
+    transition: color 0.15s;
+  }
+  .history-del:active { color: var(--danger); }
+
+  .empty-history {
+    text-align: center; padding: 24px;
+    color: var(--text3); font-size: 13px;
+  }
+
+  /* ── CHAT ── */
+  #chat { background: var(--bg); }
+
+  .chat-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 52px 20px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .chat-back {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 50%; width: 38px; height: 38px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 18px; flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .chat-back:active { background: var(--border2); }
+  .chat-persona-icon { font-size: 28px; flex-shrink: 0; }
+  .chat-persona-info { flex: 1; min-width: 0; }
+  .chat-persona-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px; font-weight: 700;
+  }
+  .chat-persona-role { font-size: 11px; color: var(--text2); }
+  .chat-clear {
+    background: none; border: none;
+    color: var(--text3); font-size: 20px;
+    padding: 8px; cursor: pointer;
+    transition: color 0.15s;
+  }
+  .chat-clear:active { color: var(--danger); }
+
+  .chat-messages {
+    flex: 1; overflow-y: auto;
+    padding: 16px 16px 8px;
+    display: flex; flex-direction: column; gap: 8px;
+    scroll-behavior: smooth;
+  }
+  .chat-messages::-webkit-scrollbar { display: none; }
+
+  .msg {
+    max-width: 85%; display: flex; flex-direction: column;
+    animation: msgIn 0.25s ease both;
+  }
+  .msg.user { align-self: flex-end; align-items: flex-end; }
+  .msg.ai   { align-self: flex-start; align-items: flex-start; }
+
+  .msg-bubble {
+    padding: 11px 15px;
+    border-radius: 18px;
+    line-height: 1.55;
+    font-size: 14.5px;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+  .msg.user .msg-bubble {
+    background: var(--bubble-user);
+    color: #fff;
+    border-bottom-right-radius: 5px;
+  }
+  .msg.ai .msg-bubble {
+    background: var(--bubble-ai);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 5px;
+  }
+  .msg-time {
+    font-size: 10px; color: var(--text3);
+    margin-top: 4px; padding: 0 4px;
+  }
+
+  /* Typing indicator */
+  .typing-indicator {
+    display: flex; gap: 5px; align-items: center;
+    padding: 14px 16px;
+    background: var(--bubble-ai);
+    border: 1px solid var(--border);
+    border-radius: 18px; border-bottom-left-radius: 5px;
+    width: fit-content;
+  }
+  .typing-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--text2);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  /* Input bar */
+  .chat-input-bar {
+    display: flex; align-items: flex-end; gap: 10px;
+    padding: 12px 16px 28px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .chat-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 22px;
+    padding: 10px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    resize: none; outline: none;
+    max-height: 120px; min-height: 42px;
+    line-height: 1.5;
+    transition: border-color 0.15s;
+  }
+  .chat-input:focus { border-color: var(--accent); }
+  .chat-input::placeholder { color: var(--text3); }
+  .chat-send {
+    width: 42px; height: 42px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 50%;
+    color: #fff; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  .chat-send:active { transform: scale(0.9); }
+  .chat-send:disabled { opacity: 0.4; }
+
+  /* Welcome bubble */
+  .welcome-bubble {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin: 8px 0 16px;
+    text-align: center;
+    animation: fadeIn 0.4s ease;
+  }
+  .welcome-icon { font-size: 40px; margin-bottom: 8px; }
+  .welcome-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px; font-weight: 700; margin-bottom: 6px;
+  }
+  .welcome-text { font-size: 13px; color: var(--text2); line-height: 1.5; }
+
+  /* Suggestions */
+  .suggestions {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    padding: 0 16px 12px;
+    flex-shrink: 0;
+  }
+  .suggestion-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 20px; padding: 6px 14px;
+    font-size: 12px; color: var(--text2);
+    cursor: pointer; transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .suggestion-chip:active {
+    background: var(--accent)22;
+    border-color: var(--accent)66;
+    color: var(--accent);
+  }
+
+  /* Dividers */
+  .date-divider {
+    text-align: center; color: var(--text3);
+    font-size: 11px; padding: 8px 0;
+    position: relative;
+  }
+  .date-divider::before, .date-divider::after {
+    content: ''; position: absolute; top: 50%;
+    width: 35%; height: 1px; background: var(--border);
+  }
+  .date-divider::before { left: 0 }
+  .date-divider::after { right: 0 }
+
+  /* Scrollbar global hide */
+  * { scrollbar-width: none; -ms-overflow-style: none; }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash" class="screen active">
+  <div class="splash-logo">NEXUS</div>
+  <div class="splash-sub">Локальний ШІ · AI Assistant</div>
+  <div class="splash-loader"></div>
+</div>
+
+<!-- HOME -->
+<div id="home" class="screen">
+  <div class="home-header">
+    <div class="home-greeting">Привіт! 👋<br>Обери <span>свого ШІ</span></div>
+    <div class="home-sub">Персональні асистенти на будь-який смак</div>
+  </div>
+  <div class="home-scroll">
+    <div class="section-label">🤖 Асистенти</div>
+    <div class="personas-grid" id="personasGrid"></div>
+
+    <div class="section-label">💬 Остання історія</div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div id="chat" class="screen">
+  <div class="chat-header">
+    <div class="chat-back" id="chatBack">←</div>
+    <div class="chat-persona-icon" id="chatIcon"></div>
+    <div class="chat-persona-info">
+      <div class="chat-persona-name" id="chatName"></div>
+      <div class="chat-persona-role" id="chatRole"></div>
+    </div>
+    <button class="chat-clear" id="chatClear" title="Очистити чат">🗑</button>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="suggestions" id="suggestionsBar"></div>
+  <div class="chat-input-bar">
+    <textarea class="chat-input" id="chatInput"
+      placeholder="Напиши повідомлення..." rows="1"></textarea>
+    <button class="chat-send" id="chatSend">➤</button>
+  </div>
+</div>
+
+<script>
+// ── PERSONAS DATA ──────────────────────────────────────────────
+const PERSONAS = [
+  {
+    id: 'psychologist',
+    name: 'Психолог',
+    icon: '🧠',
+    role: 'Емоційна підтримка',
+    color: '#7c6aff',
+    tag: 'Підтримка',
+    desc: 'Вислухаю, підтримаю та допоможу розібратись у почуттях',
+    welcome: 'Привіт! Я тут, щоб вислухати тебе. Розкажи, що тебе турбує — тут безпечне місце 💙',
+    prompt: `Ти досвідчений психолог з великим серцем. Ти спілкуєшся виключно українською мовою.
+Твій стиль: теплий, емпатичний, уважний. Не даєш поради одразу — спочатку слухаєш і розумієш.
+Задаєш уточнювальні питання. Ніколи не засуджуєш. Якщо людина в кризі — рекомендуй звернутись до спеціаліста.
+Відповідаєш коротко і по суті, не занадто довго.`,
+    suggestions: ['Відчуваю тривогу', 'Проблеми зі стресом', 'Не можу спати', 'Потрібна підтримка']
+  },
+  {
+    id: 'chef',
+    name: 'Шеф-кухар',
+    icon: '👨‍🍳',
+    role: 'Кулінарний майстер',
+    color: '#ff7c4a',
+    tag: 'Їжа',
+    desc: 'Рецепти, поради та секрети смачної кухні від гуру',
+    welcome: 'Буongiorno! Сьогодні готуємо шось смачне? Скажи що маєш у холодильнику — придумаємо 🍝',
+    prompt: `Ти геніальний шеф-кухар з досвідом у міжнародній та українській кухні. Спілкуєшся українською.
+Ти знаєш тисячі рецептів, вмієш замінювати інгредієнти, підказуєш лайфхаки. 
+Стиль: харизматичний, пристрасний до їжі, іноді кидаєш кулінарні терміни.
+Даєш чіткі рецепти з кроками. Якщо питають що приготувати — уточнюєш що є.`,
+    suggestions: ['Що приготувати швидко?', 'Рецепт борщу', 'Дієтична вечеря', 'Десерт за 15 хв']
+  },
+  {
+    id: 'developer',
+    name: 'Розробник',
+    icon: '💻',
+    role: 'Код та технології',
+    color: '#4aff9f',
+    tag: 'Код',
+    desc: 'Допоможу з кодом, архітектурою та технічними питаннями',
+    welcome: 'Йоу! 👾 Що кодимо сьогодні? Питай будь-що — від HTML до системного програмування.',
+    prompt: `Ти крутий senior розробник, знаєш усі популярні мови та фреймворки. Спілкуєшся українською, але технічні терміни залишаєш англійською.
+Даєш чіткі, робочі приклади коду. Пояснюєш чому так, а не інакше.
+Знаєш JavaScript, Python, Kotlin, C#, SQL та ще десятки мов. Любиш чистий код і хороші практики.
+Відповідаєш чітко та структуровано.`,
+    suggestions: ['Допоможи з JS', 'Що таке REST API?', 'Поясни алгоритм', 'Code review']
+  },
+  {
+    id: 'lawyer',
+    name: 'Юрист',
+    icon: '⚖️',
+    role: 'Правова допомога',
+    color: '#ffd44a',
+    tag: 'Право',
+    desc: 'Правові консультації та роз\'яснення законодавства України',
+    welcome: 'Добрий день! Я можу допомогти розібратись у правових питаннях. Пам\'ятайте: це загальна консультація ⚖️',
+    prompt: `Ти досвідчений юрист, знаєш українське законодавство. Спілкуєшся українською, офіційно але зрозуміло.
+Пояснюєш складні юридичні терміни простими словами. Завжди додаєш застереження що це загальна інформація.
+При серйозних питаннях — рекомендуєш звернутись до ліцензованого юриста.
+Знаєш трудове, цивільне, кримінальне право України.`,
+    suggestions: ['Права орендаря', 'Трудовий договір', 'Що робити при ДТП?', 'Спадщина']
+  },
+  {
+    id: 'trainer',
+    name: 'Тренер',
+    icon: '💪',
+    role: 'Фітнес та здоров\'я',
+    color: '#ff4a7c',
+    tag: 'Спорт',
+    desc: 'Тренування, харчування та мотивація для твого тіла',
+    welcome: 'Погнали! 🔥 Я твій персональний тренер. Разом досягнемо твоїх цілей. Розкажи про свою мету!',
+    prompt: `Ти енергійний персональний тренер і нутриціолог. Спілкуєшся українською, з мотивуючим тоном.
+Знаєш тренування для дому і залу, правильне харчування, відновлення.
+Складаєш програми тренувань, розраховуєш КБЖУ. Завжди мотивуєш і підтримуєш.
+При травмах чи болях — рекомендуєш лікаря. Відповіді чіткі та практичні.`,
+    suggestions: ['Тренування вдома', 'Схуднення за місяць', 'Скласти меню', 'Мотивація']
+  },
+  {
+    id: 'tutor',
+    name: 'Репетитор',
+    icon: '📚',
+    role: 'Навчання та знання',
+    color: '#4ac8ff',
+    tag: 'Освіта',
+    desc: 'Пояснення будь-якої теми просто і зрозуміло',
+    welcome: 'Привіт, учню! 📖 Готовий вчитись? Я поясню будь-яку тему так, щоб дійсно зрозуміти.',
+    prompt: `Ти талановитий репетитор та вчитель, можеш пояснити будь-яку тему. Спілкуєшся українською.
+Використовуєш прості аналогії та приклади. Перевіряєш розуміння, задаєш питання.
+Знаєш математику, фізику, хімію, біологію, історію, мови. Адаптуєшся до рівня учня.
+Заохочуєш цікавість та самостійне мислення. Відповіді структуровані.`,
+    suggestions: ['Поясни математику', 'Допоможи з фізикою', 'Англійська граматика', 'Підготовка до ЗНО']
+  },
+  {
+    id: 'writer',
+    name: 'Письменник',
+    icon: '✍️',
+    role: 'Текст та творчість',
+    color: '#c44aff',
+    tag: 'Творчість',
+    desc: 'Допоможу написати, відредагувати або придумати будь-який текст',
+    welcome: 'Привіт, творча душа! ✨ Разом напишемо щось геніальне. Що потрібно — пост, есе, вірш, казку?',
+    prompt: `Ти талановитий письменник, редактор та копірайтер. Спілкуєшся і пишеш українською.
+Пишеш будь-які тексти: пости, есе, вірші, казки, бізнес-листи, сценарії.
+Стиль підлаштовуєш під задачу. Знаєш правила граматики та стилістики.
+Даєш варіанти і пропонуєш ідеї. Допомагаєш з редагуванням чужих текстів.`,
+    suggestions: ['Напиши пост в Instagram', 'Привітання другу', 'Короткий вірш', 'Редагуй текст']
+  },
+  {
+    id: 'assistant',
+    name: 'Асистент',
+    icon: '🤖',
+    role: 'Всезнаючий помічник',
+    color: '#ffffff',
+    tag: 'Все',
+    desc: 'Універсальний ШІ для будь-яких питань та завдань',
+    welcome: 'Вітаю! Я готовий допомогти з будь-чим 🤖 Питай що завгодно — я постараюсь дати найкращу відповідь.',
+    prompt: `Ти корисний, чесний та розумний ШІ-асистент. Спілкуєшся українською.
+Відповідаєш на будь-які питання: наука, культура, поради, факти, аналіз.
+Якщо не знаєш — чесно кажеш. Даєш збалансовані відповіді.
+Стиль: дружній, чіткий, інформативний. Відповідаєш по суті без зайвої води.`,
+    suggestions: ['Розкажи цікавий факт', 'Допоможи з планом', 'Переклади текст', 'Порівняй варіанти']
+  }
+];
+
+// ── STATE ────────────────────────────────────────────────────
+let currentPersona = null;
+let currentMessages = []; // [{role, content, time}]
+let allHistory = []; // [{personaId, messages, lastTime}]
+let isThinking = false;
+
+// ── STORAGE ──────────────────────────────────────────────────
+function saveHistory() {
+  try { localStorage.setItem('nexus_history', JSON.stringify(allHistory)); } catch(e){}
+}
+function loadHistory() {
+  try { allHistory = JSON.parse(localStorage.getItem('nexus_history') || '[]'); } catch(e){ allHistory = []; }
+}
+
+function getPersonaHistory(personaId) {
+  return allHistory.find(h => h.personaId === personaId) || null;
+}
+
+function saveCurrentChat() {
+  if (!currentPersona || currentMessages.length === 0) return;
+  const idx = allHistory.findIndex(h => h.personaId === currentPersona.id);
+  const entry = {
+    personaId: currentPersona.id,
+    messages: currentMessages,
+    lastTime: Date.now()
+  };
+  if (idx >= 0) allHistory[idx] = entry;
+  else allHistory.unshift(entry);
+  saveHistory();
+}
+
+function deleteHistory(personaId) {
+  allHistory = allHistory.filter(h => h.personaId !== personaId);
+  saveHistory();
+  renderHistory();
+}
+
+// ── AI ENGINE ────────────────────────────────────────────────
+// Fully local AI — rule-based + knowledge base (no internet needed)
+const AI_KNOWLEDGE = {
+  greetings: ['привіт','добрий','hello','hi','вітаю','доброго','добрий день','добрий ранок'],
+  farewell: ['до побачення','бувай','чао','поки','goodbye','bye'],
+  thanks: ['дякую','спасибі','thanks','thank'],
+  howAreYou: ['як ти','як справи','як у тебе'],
+};
+
+function matchesKeywords(text, keywords) {
+  const t = text.toLowerCase();
+  return keywords.some(k => t.includes(k));
+}
+
+function timeNow() {
+  return new Date().toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
+}
+
+// Persona-specific local AI responses
+const PERSONA_RESPONSES = {
+  psychologist: {
+    anxiety: ['Тривога — це нормальна реакція нашої психіки. Розкажи мені більше: коли ти вперше відчув це? Що зазвичай її викликає?',
+      'Я розумію, це важко. Давай спробуємо дихальну вправу: вдих на 4 рахунки, затримай на 4, видих на 8. Як ти зараз?'],
+    stress: ['Стрес накопичується непомітно. Що зараз найбільше тиснить на тебе? Робота, відносини, чи щось інше?',
+      'Коли ми у стресі, важливо спочатку зупинитись. Що для тебе зазвичай є способом розслабитись?'],
+    sleep: ['Проблеми зі сном часто пов\'язані з думками, які крутяться в голові. Що ти думаєш перед сном?',
+      'Спробуй цей ритуал: за годину до сну — без екранів, тепла ванна та спокійна музика. Розкажи, чи є щось що заважає заснути.'],
+    lonely: ['Почуття самотності буває дуже болючим. Ти не один — я тут. Розкажи, що відбувається?'],
+    default: ['Розкажи мені більше. Я уважно слухаю і готовий допомогти розібратись.',
+      'Як ти почуваєш себе зараз? Важливо зрозуміти твій стан перед тим, як рухатись далі.',
+      'Це звучить непросто. Давно ти так себе відчуваєш?']
+  },
+  chef: {
+    recipe: ['Чудовий вибір! Ось класичний рецепт:\n\n🥄 Інгредієнти готую, кроки розписую — що саме хочеш приготувати?',
+      'О, це одна з моїх улюблених страв! Є кілька версій — класична і сучасна. Яку обрати?'],
+    borsch: ['🍲 Борщ за класичним рецептом:\n\n**Інгредієнти (4 порції):**\n— Яловичина 500г\n— Буряк 2шт\n— Капуста 300г\n— Картопля 3шт\n— Морква 1шт\n— Цибуля 1шт\n— Томатна паста 3 ст.л.\n— Часник, лавровий лист, сіль\n\n**Кроки:**\n1. Зваріть бульйон з м\'яса (1.5 год)\n2. Натріть буряк, посмажте з томатною пастою 10 хв\n3. Додайте моркву і цибулю\n4. В бульйон — картоплю, через 10 хв — капусту\n5. Додайте зажарку, варіть 15 хв\n6. Часник в кінці!\n\nПодавати зі сметаною 😋'],
+    fast: ['Швидко і смачно — моє друге ім\'я! 🔥\n\nТоп-5 страв за 15 хвилин:\n1. Паста з часником і олією (Aglio e Olio)\n2. Яєчня з овочами\n3. Тости з авокадо\n4. Швидкий суп з вермішеллю\n5. Смажений рис із яйцем\n\nЩо є в холодильнику? Підберу конкретний рецепт!'],
+    default: ['Розкажи що маєш вдома — і я придумаю щось смачне! 🍳',
+      'Хм, цікаве питання для кухні! Давай розберемось разом.',
+      'Як справжній шеф скажу: найважливіший інгредієнт — це любов! А тепер до деталей 😄']
+  },
+  developer: {
+    javascript: ['JavaScript — моя улюблена! Ось що тобі треба знати:\n\n```javascript\n// Приклад\nconst greet = (name) => `Привіт, ${name}!`;\nconsole.log(greet("Олексій"));\n```\n\nЩо конкретно хочеш реалізувати?'],
+    api: ['REST API — основа сучасного веб-розробки.\n\n**Основні методи:**\n— GET — отримати дані\n— POST — створити\n— PUT/PATCH — оновити\n— DELETE — видалити\n\n**Приклад запиту:**\n```javascript\nconst res = await fetch("/api/users", {\n  method: "POST",\n  headers: {"Content-Type": "application/json"},\n  body: JSON.stringify({name: "Alex"})\n});\n```\n\nЩо саме реалізуєш?'],
+    git: ['Git — must have для будь-якого розробника!\n\n**Основні команди:**\n```bash\ngit init          # ініціалізація\ngit add .         # додати зміни\ngit commit -m ""  # зберегти\ngit push          # відправити\ngit pull          # оновити\ngit branch        # гілки\n```\n\nЯка проблема?'],
+    default: ['Цікава задача! Розкажи детальніше — мова програмування, фреймворк, і що саме потрібно зробити?',
+      'Добре питання для розробника! Давай розберемось по кроках.',
+      'Хм, тут є кілька підходів. Залежить від контексту — що за проект?']
+  },
+  lawyer: {
+    rent: ['Щодо оренди в Україні:\n\n**Ваші права як орендаря:**\n— Отримати житло у відповідному стані\n— Дострокове розірвання з попередженням за 3 місяці\n— Захист від незаконного виселення\n\n**Важливо:**\n— Укладайте договір письмово\n— Фіксуйте стан майна актом\n— Зберігайте квитанції про оплату\n\n⚠️ Це загальна інформація. При конкретній ситуації — консультуйтесь з юристом.'],
+    work: ['Щодо трудових відносин в Україні:\n\n**КЗпП України гарантує:**\n— Письмовий трудовий договір\n— Мінімальну зарплату\n— Відпустку 24 дні\n— Лікарняний\n\n**При порушеннях:** зверніться до Держпраці або суду.\n\n⚠️ Консультація носить загальний характер.'],
+    default: ['Розумію ваше питання. В українському законодавстві є кілька аспектів цієї теми. Уточніть ситуацію — дам більш конкретну відповідь.\n\n⚠️ Нагадую: це загальна інформація, не юридична консультація.',
+      'Цікаве правове питання. Відповідь залежить від конкретних обставин. Розкажіть деталі?']
+  },
+  trainer: {
+    workout: ['🔥 Програма для дому (без обладнання):\n\n**3 рази на тиждень:**\n\n1. Присідання — 3×15\n2. Віджимання — 3×10\n3. Планка — 3×45 сек\n4. Випади — 3×12 на кожну ногу\n5. Бурпі — 3×8\n\nВідпочинок між підходами: 60 сек.\nЗагальний час: ~30 хвилин.\n\nПочнеш сьогодні? 💪'],
+    nutrition: ['🥗 Базові принципи харчування:\n\n**Розрахунок калорій:**\nВага×22 = базовий обмін\n+ 300-500 кал якщо активний\n\n**БЖУ баланс:**\n— Білок: 1.5-2г на кг ваги\n— Жири: 25-30% калорій\n— Вуглеводи: решта\n\n**Корисні звички:**\n— Пий 2л води на день\n— Їж кожні 3-4 години\n— Не пропускай сніданок\n\nЯка твоя мета — схуднення чи набір?'],
+    motivation: ['ТИ МОЖЕШ! 🔥\n\nПам\'ятай: кожне тренування — це крок до кращої версії себе.\n\n«Важко на тренуванні — легко в житті»\n\nНавіть 20 хвилин сьогодні краще, ніж нічого. Погнали! 💪'],
+    default: ['Відмінне питання для здоров\'я! Розкажи мені більше: яка твоя мета, скільки часу маєш і який рівень підготовки?',
+      'Чудово! Фітнес і здоров\'я — це найкраща інвестиція. Деталі?']
+  },
+  tutor: {
+    math: ['📐 Математика — це логіка!\n\nЯку тему розбираємо?\n— Алгебра (рівняння, функції)\n— Геометрія\n— Теорія чисел\n— Статистика\n— Калькул\n\nПокажи задачу — розберемо покроково.'],
+    physics: ['⚡ Фізика пояснює весь всесвіт!\n\nПодай тему або задачу:\n— Механіка\n— Електрика\n— Оптика\n— Термодинаміка\n\nБудь-яку задачу розберемо з формулами і поясненням.'],
+    english: ['🇬🇧 English Grammar!\n\nBasic tenses:\n— Present Simple: I work\n— Present Continuous: I am working\n— Past Simple: I worked\n— Future: I will work\n\nЩо конкретно хочеш вивчити або практикувати?'],
+    default: ['Чудове питання! Давай розберемось разом. Яка тема або предмет?',
+      'Навчання — це суперсила! Поясни задачу або тему — розберемо детально.',
+      'Цікаво! Давай почнемо з основ. Що саме тебе цікавить?']
+  },
+  writer: {
+    instagram: ['📱 Крутий Instagram пост:\n\nСтруктура:\n1. Сильний перший рядок (зупини скролл)\n2. Основна думка або історія\n3. Заклик до дії або питання\n4. Хештеги (5-10)\n\nПро що пишемо? Тема, тон (серйозний/веселий), аудиторія?'],
+    poem: ['✨ З задоволенням напишу вірш!\n\nПро що писати?\n— Кохання\n— Природа\n— Мрії\n— Смуток і надія\n— Щось інше?\n\nІ який настрій — ліричний, веселий, філософський?'],
+    letter: ['📝 Листи мають силу!\n\nКому і з якого приводу? Наприклад:\n— Другу (неформально)\n— Колезі (офіційно)\n— Коханій людині (романтично)\n\nРозкажи деталі — напишемо ідеально.'],
+    default: ['Текст — це мистецтво! Що пишемо? Жанр, тема, для кого?',
+      'Залюбки допоможу! Опиши задачу детальніше — жанр, тон, обсяг.']
+  },
+  assistant: {
+    fact: ['🌍 Цікавий факт:\n\nМеланові пігменти в ДНК людини можуть зберігати сонячну енергію. Вчені досі вивчають цей феномен!\n\nЩе один: в Японії є готель, якому понад 1300 років — найстаріший у світі.',
+      '🔬 А ви знали?\n\nОктопуси мають три серця і блакитну кров. Два серця качають кров через зябра, одне — через тіло.\n\nАбо ось: мед не псується ніколи — в єгипетських пірамідах знаходили їстівний мед.'],
+    translate: ['Я можу допомогти з перекладом! Напиши текст або слово — перекладу з/на англійську, польську, та інші мови.'],
+    default: ['Цікаве питання! Дай мені трохи подумати і дам найкращу відповідь.',
+      'З задоволенням допоможу! Уточни деталі — що саме потрібно?',
+      'Відмінна тема! Ось що я знаю про це:']
+  }
+};
+
+function generateLocalResponse(personaId, userMessage) {
+  const msg = userMessage.toLowerCase();
+  const persona = PERSONAS.find(p => p.id === personaId);
+  
+  // Universal responses
+  if (matchesKeywords(msg, AI_KNOWLEDGE.greetings)) {
+    return `Привіт! ${persona?.welcome || 'Як можу допомогти?'}`;
+  }
+  if (matchesKeywords(msg, AI_KNOWLEDGE.farewell)) {
+    return 'До побачення! Звертайся коли потрібно 👋';
+  }
+  if (matchesKeywords(msg, AI_KNOWLEDGE.thanks)) {
+    return 'Будь ласка! Радий допомогти 😊';
+  }
+  if (matchesKeywords(msg, AI_KNOWLEDGE.howAreYou)) {
+    return 'Дякую що питаєш! Я ШІ, тому завжди готовий допомагати. Як ти? 😊';
+  }
+
+  // Persona-specific responses
+  const responses = PERSONA_RESPONSES[personaId] || PERSONA_RESPONSES.assistant;
+  
+  if (personaId === 'psychologist') {
+    if (msg.includes('тривог') || msg.includes('страх') || msg.includes('панік')) return pick(responses.anxiety);
+    if (msg.includes('стрес') || msg.includes('тиск') || msg.includes('важко')) return pick(responses.stress);
+    if (msg.includes('сон') || msg.includes('спати') || msg.includes('безсон')) return pick(responses.sleep);
+    if (msg.includes('самот') || msg.includes('нікого')) return pick(responses.lonely);
+  }
+  if (personaId === 'chef') {
+    if (msg.includes('борщ')) return pick(responses.borsch);
+    if (msg.includes('швидко') || msg.includes('15 хв') || msg.includes('швидк')) return pick(responses.fast);
+    if (msg.includes('рецепт') || msg.includes('приготу')) return pick(responses.recipe);
+  }
+  if (personaId === 'developer') {
+    if (msg.includes('javascript') || msg.includes('js ') || msg.includes(' js')) return pick(responses.javascript);
+    if (msg.includes('api') || msg.includes('апі')) return pick(responses.api);
+    if (msg.includes('git') || msg.includes('гіт')) return pick(responses.git);
+  }
+  if (personaId === 'lawyer') {
+    if (msg.includes('оренд') || msg.includes('квартир')) return pick(responses.rent);
+    if (msg.includes('трудов') || msg.includes('робот') || msg.includes('звільн')) return pick(responses.work);
+  }
+  if (personaId === 'trainer') {
+    if (msg.includes('тренуван') || msg.includes('вправ') || msg.includes('дома')) return pick(responses.workout);
+    if (msg.includes('харчуван') || msg.includes('калор') || msg.includes('дієт')) return pick(responses.nutrition);
+    if (msg.includes('мотив') || msg.includes('не хочу') || msg.includes('лінь')) return pick(responses.motivation);
+  }
+  if (personaId === 'tutor') {
+    if (msg.includes('матем') || msg.includes('числ') || msg.includes('задач')) return pick(responses.math);
+    if (msg.includes('фізик') || msg.includes('сил') || msg.includes('ньютон')) return pick(responses.physics);
+    if (msg.includes('english') || msg.includes('англ')) return pick(responses.english);
+  }
+  if (personaId === 'writer') {
+    if (msg.includes('instagram') || msg.includes('пост') || msg.includes('соцмереж')) return pick(responses.instagram);
+    if (msg.includes('вірш') || msg.includes('поез')) return pick(responses.poem);
+    if (msg.includes('лист') || msg.includes('привіт') && msg.includes('напиш')) return pick(responses.letter);
+  }
+  if (personaId === 'assistant') {
+    if (msg.includes('факт') || msg.includes('цікав')) return pick(responses.fact);
+    if (msg.includes('перекла') || msg.includes('translate')) return pick(responses.translate);
+  }
+
+  // Smart fallback — generate contextual response
+  return generateContextualResponse(personaId, userMessage);
+}
+
+function generateContextualResponse(personaId, msg) {
+  const responses = PERSONA_RESPONSES[personaId] || PERSONA_RESPONSES.assistant;
+  const base = pick(responses.default || ['Цікаво! Розкажи більше.']);
+  
+  // Add some contextual flavor
+  const words = msg.split(' ').filter(w => w.length > 3);
+  if (words.length > 0) {
+    const topic = words[Math.floor(Math.random() * words.length)];
+  }
+  
+  return base;
+}
+
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// Simulate "thinking" delay
+function thinkingDelay() {
+  const len = Math.floor(Math.random() * 1000) + 600;
+  return new Promise(r => setTimeout(r, len));
+}
+
+// ── RENDER FUNCTIONS ─────────────────────────────────────────
+function renderPersonas() {
+  const grid = document.getElementById('personasGrid');
+  grid.innerHTML = PERSONAS.map(p => `
+    <div class="persona-card" style="--p-color: ${p.color}" 
+         onclick="openChat('${p.id}')">
+      <div class="persona-icon">${p.icon}</div>
+      <div class="persona-name">${p.name}</div>
+      <div class="persona-desc">${p.desc}</div>
+      <span class="persona-tag">${p.tag}</span>
+    </div>
+  `).join('');
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  const sorted = [...allHistory].sort((a,b) => b.lastTime - a.lastTime).slice(0, 8);
+  
+  if (sorted.length === 0) {
+    list.innerHTML = '<div class="empty-history">Поки що нема історії.<br>Почни перший чат! 💬</div>';
+    return;
+  }
+  
+  list.innerHTML = sorted.map(h => {
+    const persona = PERSONAS.find(p => p.id === h.personaId);
+    if (!persona) return '';
+    const lastMsg = h.messages[h.messages.length - 1];
+    const timeAgo = formatTimeAgo(h.lastTime);
+    return `
+      <div class="history-item" onclick="openChatFromHistory('${h.personaId}')">
+        <div class="history-icon">${persona.icon}</div>
+        <div class="history-info">
+          <div class="history-name">${persona.name}</div>
+          <div class="history-preview">${lastMsg ? truncate(lastMsg.content, 40) : ''}</div>
+        </div>
+        <div class="history-time">${timeAgo}</div>
+        <button class="history-del" onclick="event.stopPropagation(); deleteHistoryItem('${h.personaId}')">×</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function formatTimeAgo(ts) {
+  const diff = Date.now() - ts;
+  if (diff < 60000) return 'щойно';
+  if (diff < 3600000) return Math.floor(diff/60000) + 'хв';
+  if (diff < 86400000) return Math.floor(diff/3600000) + 'год';
+  return Math.floor(diff/86400000) + 'д';
+}
+
+function truncate(str, len) {
+  return str.length > len ? str.slice(0, len) + '…' : str;
+}
+
+function deleteHistoryItem(personaId) {
+  deleteHistory(personaId);
+}
+
+// ── CHAT FUNCTIONS ───────────────────────────────────────────
+function openChat(personaId) {
+  currentPersona = PERSONAS.find(p => p.id === personaId);
+  const saved = getPersonaHistory(personaId);
+  currentMessages = saved ? [...saved.messages] : [];
+  
+  renderChatHeader();
+  renderChatMessages();
+  renderSuggestions();
+  showScreen('chat');
+  
+  setTimeout(() => {
+    document.getElementById('chatMessages').scrollTop = 99999;
+  }, 100);
+}
+
+function openChatFromHistory(personaId) {
+  openChat(personaId);
+}
+
+function renderChatHeader() {
+  document.getElementById('chatIcon').textContent = currentPersona.icon;
+  document.getElementById('chatName').textContent = currentPersona.name;
+  document.getElementById('chatRole').textContent = currentPersona.role;
+}
+
+function renderChatMessages() {
+  const container = document.getElementById('chatMessages');
+  
+  if (currentMessages.length === 0) {
+    container.innerHTML = `
+      <div class="welcome-bubble">
+        <div class="welcome-icon">${currentPersona.icon}</div>
+        <div class="welcome-name">${currentPersona.name}</div>
+        <div class="welcome-text">${currentPersona.welcome}</div>
+      </div>
+    `;
+    return;
+  }
+  
+  let html = '';
+  let lastDate = '';
+  
+  currentMessages.forEach(msg => {
+    const date = msg.time ? new Date(msg.timestamp || Date.now()).toLocaleDateString('uk-UA') : '';
+    if (date && date !== lastDate) {
+      lastDate = date;
+    }
+    
+    html += `
+      <div class="msg ${msg.role}">
+        <div class="msg-bubble">${escapeHtml(msg.content)}</div>
+        <div class="msg-time">${msg.time || ''}</div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+  container.scrollTop = container.scrollHeight;
+}
+
+function renderSuggestions() {
+  const bar = document.getElementById('suggestionsBar');
+  if (currentMessages.length > 0) { bar.innerHTML = ''; return; }
+  
+  bar.innerHTML = (currentPersona.suggestions || []).map(s => `
+    <div class="suggestion-chip" onclick="sendSuggestion('${s}')">${s}</div>
+  `).join('');
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/`(.*?)`/g,'<code style="background:#ffffff15;padding:1px 5px;border-radius:4px;font-family:monospace;font-size:12px">$1</code>');
+}
+
+function addMessage(role, content, time) {
+  const msg = { role, content, time: time || timeNow(), timestamp: Date.now() };
+  currentMessages.push(msg);
+  
+  const container = document.getElementById('chatMessages');
+  
+  // Remove welcome bubble
+  const welcome = container.querySelector('.welcome-bubble');
+  if (welcome) welcome.remove();
+  
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `
+    <div class="msg-bubble">${escapeHtml(content)}</div>
+    <div class="msg-time">${msg.time}</div>
+  `;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  
+  // Hide suggestions
+  document.getElementById('suggestionsBar').innerHTML = '';
+}
+
+function showTyping() {
+  const container = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.id = 'typingIndicator';
+  div.innerHTML = `
+    <div class="typing-indicator">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>
+  `;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function hideTyping() {
+  const t = document.getElementById('typingIndicator');
+  if (t) t.remove();
+}
+
+async function sendMessage(text) {
+  if (!text.trim() || isThinking) return;
+  
+  const input = document.getElementById('chatInput');
+  input.value = '';
+  input.style.height = '';
+  
+  isThinking = true;
+  document.getElementById('chatSend').disabled = true;
+  
+  addMessage('user', text.trim());
+  showTyping();
+  
+  await thinkingDelay();
+  
+  const response = generateLocalResponse(currentPersona.id, text.trim());
+  
+  hideTyping();
+  addMessage('ai', response);
+  
+  saveCurrentChat();
+  
+  isThinking = false;
+  document.getElementById('chatSend').disabled = false;
+  input.focus();
+}
+
+function sendSuggestion(text) {
+  sendMessage(text);
+}
+
+// ── SCREEN NAVIGATION ─────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── EVENT LISTENERS ──────────────────────────────────────────
+document.getElementById('chatSend').addEventListener('click', () => {
+  const v = document.getElementById('chatInput').value;
+  sendMessage(v);
+});
+
+document.getElementById('chatInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    const v = document.getElementById('chatInput').value;
+    sendMessage(v);
+  }
+});
+
+document.getElementById('chatInput').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+document.getElementById('chatBack').addEventListener('click', () => {
+  saveCurrentChat();
+  renderHistory();
+  showScreen('home');
+});
+
+document.getElementById('chatClear').addEventListener('click', () => {
+  if (confirm('Очистити цей чат?')) {
+    currentMessages = [];
+    deleteHistory(currentPersona.id);
+    renderChatMessages();
+    renderSuggestions();
+  }
+});
+
+// ── INIT ──────────────────────────────────────────────────────
+function init() {
+  loadHistory();
+  renderPersonas();
+  renderHistory();
+  
+  // Splash screen → home
+  setTimeout(() => {
+    document.getElementById('splash').classList.remove('active');
+    document.getElementById('home').classList.add('active');
+  }, 1800);
+}
+
+init();
+
+// ── PWA SERVICE WORKER ────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('SW: офлайн режим активовано ✅'))
+      .catch(e => console.log('SW error:', e));
+  });
+}
+</script>
+</body>
+</html>
